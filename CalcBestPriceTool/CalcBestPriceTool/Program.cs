@@ -28,12 +28,19 @@ namespace CalcBestPriceTool
             InitStates(totalPrice, states);
 
             // 第一行特殊处理
-            states[0, 0] = 1;
-            if (totalPrice > _courses[0].Price)
-            {
-                states[0, (int)_courses[0].Price] = 1;
-            }
+            CalcFirstCourseScheme(states, totalPrice);
 
+            CalcBestPriceScheme(totalPrice, states);
+
+            //Print(states, PricesCount, totalPrice);
+
+            PrintMaxBuyPrice(totalPrice, states);
+
+            PrintBuyScheme(totalPrice, states);
+        }
+
+        private static void CalcBestPriceScheme(int totalPrice, int[,] states)
+        {
             for (var i = 1; i < PricesCount; i++)
             {
                 // 不买该课程
@@ -48,15 +55,26 @@ namespace CalcBestPriceTool
                 // 购买该课程
                 for (var j = 0; j < totalPrice; j++)
                 {
-                    var curPrice = (int)(j + _courses[i].Price);
+                    var curPrice = (int) (j + _courses[i].Price);
                     if (states[i - 1, j] == 1 && totalPrice > j + _courses[i].Price)
                     {
                         states[i, curPrice] = 1;
                     }
                 }
             }
+        }
 
-            //Print(states, PricesCount, totalPrice);
+        private static void CalcFirstCourseScheme(int[,] states, int totalPrice)
+        {
+            states[0, 0] = 1;
+            if (totalPrice > _courses[0].Price)
+            {
+                states[0, (int) _courses[0].Price] = 1;
+            }
+        }
+
+        private static void PrintMaxBuyPrice(int totalPrice, int[,] states)
+        {
             for (int i = totalPrice - 1; i > 0; i--)
             {
                 if (states[PricesCount - 1, i] == 1)
@@ -65,7 +83,10 @@ namespace CalcBestPriceTool
                     break;
                 }
             }
+        }
 
+        private static void PrintBuyScheme(int totalPrice, int[,] states)
+        {
             int k;
             for (k = totalPrice - 1; k > 0; k--)
             {
