@@ -7,13 +7,13 @@ namespace CalcBestPriceTool
     {
         private static readonly Course[] _courses =
         {
-            new Course(1.0, 3),
+            new Course(1.0),
             new Course(9.0, 2),
             new Course(19.9),
-            new Course(55.0),
-            new Course(68.0),
-            new Course(79.0),
-            new Course(99.0, 3),
+            new Course(55.0,10),
+            new Course(68.0,2),
+            new Course(79.0,20),
+            new Course(99.0, 13),
             new Course(129.0),
             new Course(199.0),
             new Course(299.0),
@@ -21,7 +21,7 @@ namespace CalcBestPriceTool
 
         static void Main(string[] args)
         {
-            int totalPrice = 33;
+            int totalPrice = 117;
             totalPrice++;
             var states = new int[PricesCount, totalPrice];
 
@@ -46,19 +46,26 @@ namespace CalcBestPriceTool
                 // 不买该课程
                 for (int j = 0; j < totalPrice; j++)
                 {
-                    if (states[i - 1, j] == 1)
+                    if (states[i - 1, j] >= 0)
                     {
-                        states[i, j] = 1;
+                        states[i, j] = 0;
                     }
                 }
 
                 // 购买该课程
                 for (var j = 0; j < totalPrice; j++)
                 {
-                    var curPrice = (int) (j + _courses[i].Price);
-                    if (states[i - 1, j] == 1 && totalPrice > j + _courses[i].Price)
+                    var count = _courses[i].Count;
+                    while (count > 0)
                     {
-                        states[i, curPrice] = 1;
+                        var courseTotalPrice = (int)_courses[i].Price * count;
+                        var curPrice = j + courseTotalPrice;
+                        if (states[i - 1, j] >= 0 && totalPrice > curPrice)
+                        {
+                            states[i, curPrice] = count;
+                        }
+
+                        count--;
                     }
                 }
             }
@@ -66,22 +73,17 @@ namespace CalcBestPriceTool
 
         private static void CalcFirstCourseScheme(int[,] states, int totalPrice)
         {
-            states[0, 0] = 1;
-            if (totalPrice > _courses[0].Price)
+            states[0, 0] = 0;
+            var count = _courses[0].Count;
+            while (count > 0)
             {
-                states[0, (int) _courses[0].Price] = 1;
-            }
-        }
-
-        private static void PrintMaxBuyPrice(int totalPrice, int[,] states)
-        {
-            for (int i = totalPrice - 1; i > 0; i--)
-            {
-                if (states[PricesCount - 1, i] == 1)
+                var courseTotalPrice = (int)_courses[0].Price * count;
+                if (totalPrice > courseTotalPrice)
                 {
-                    Console.WriteLine($"Max price: {i}");
-                    break;
+                    states[0, courseTotalPrice] = count;
                 }
+
+                count--;
             }
         }
 
@@ -90,7 +92,7 @@ namespace CalcBestPriceTool
             int k;
             for (k = totalPrice - 1; k > 0; k--)
             {
-                if (states[PricesCount - 1, k] == 1)
+                if (states[PricesCount - 1, k] >= 0)
                 {
                     break;
                 }
@@ -103,28 +105,47 @@ namespace CalcBestPriceTool
 
             for (int i = PricesCount - 1; i > 0; i--)
             {
-                try
+                var count = _courses[i].Count;
+                while (count > 0)
                 {
-                    if (k - _courses[i].Price >= 0 && states[i - 1, (int)(k - _courses[i].Price)] == 1)
+                    var courseTotalPrice = (int)_courses[i].Price * count;
+                    try
                     {
-                        k -= (int)_courses[i].Price;
-                        Console.WriteLine($"Buy this price goods: {_courses[i]}");
+                        if (k - courseTotalPrice >= 0 && states[i - 1, (int)(k - courseTotalPrice)] >= 0)
+                        {
+                            k -= courseTotalPrice;
+                            Console.WriteLine($"Buy this price goods: {_courses[i]}, count: {count}");
+                        }
+
+                        if (k - courseTotalPrice >= 0 && states[i - 1, k] >= 0)
+                        {
+                            Console.WriteLine($"No buy this price goods: {_courses[i]}");
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"Error: {courseTotalPrice}");
                     }
 
-                    if (k - _courses[i].Price >= 0 && states[i - 1, k] == 1)
-                    {
-                        Console.WriteLine($"No buy this price goods: {_courses[i]}");
-                    }
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine($"Error: {(int)(k - _courses[i].Price)}");
+                    count--;
                 }
             }
 
             if (k != 0)
             {
-                Console.WriteLine($"Buy this price goods: {_courses[0]}");
+                Console.WriteLine($"Buy this price goods: {_courses[0]}, count: {k / _courses[0].Price}");
+            }
+        }
+
+        private static void PrintMaxBuyPrice(int totalPrice, int[,] states)
+        {
+            for (int i = totalPrice - 1; i > 0; i--)
+            {
+                if (states[PricesCount - 1, i] >= 0)
+                {
+                    Console.WriteLine($"Max price: {i}");
+                    break;
+                }
             }
         }
 
